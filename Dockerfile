@@ -15,7 +15,7 @@ RUN npm install
 
 # ---- Production Stage ----
 # This is the final, lean image.
-FROM base AS production
+FROM node:alpine AS production
 # Install ONLY production dependencies.
 RUN npm ci --omit=dev
 # Copy the rest of the application code
