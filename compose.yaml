@@ -1,0 +1,42 @@
+# Specify the Docker Compose file format version
+version: '3.8'
+
+# Define the services (containers) that make up your app
+services:
+  # The application service
+  app:
+    image: pavincletus/to-do-api:1.0 # Use the image from Docker Hub
+    # The rest of the service definition remains the same
+    ports:
+      # Map port 8080 on your host to port 8080 in the container
+      - "${WEB_PORT}:${WEB_PORT}"
+    environment:
+      # Pass the hostname of the redis service to our app
+      - DOCKER_REDIS_HOST=redis
+    # Make this service depend on the redis service
+    depends_on:
+      - redis
+    healthcheck:
+      # Command to run to check health. curl returns a non-zero exit code on failure.
+      test: ["CMD", "curl", "-f", "http://localhost:8080/todos"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # The Redis database service
+  redis:
+    # Use the official Redis image from Docker Hub
+    image: "redis:7-alpine"
+    volumes:
+      # Persist Redis data by mounting a named volume
+      - redis-data:/data
+    healthcheck:
+      # Redis has its own healthcheck command.
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+# Define the named volume for data persistence
+volumes:
+  redis-data:
