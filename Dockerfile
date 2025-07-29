@@ -6,6 +6,7 @@ WORKDIR /app
 
 # Copy package.json and package-lock.json first to leverage layer caching
 COPY package*.json ./
+COPY package-lock.json ./
 
 # ---- Dependencies Stage ----
 # This stage installs ALL dependencies, including dev dependencies if you had them.
