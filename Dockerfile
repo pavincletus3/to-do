@@ -1,26 +1,27 @@
-# Start with a Node.js base image
-FROM node:18-alpine
+# ---- Builder Stage ----
+# This stage builds our application and installs all dependencies
+FROM node:18-alpine AS builder
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json first to leverage layer caching
-COPY package*.json ./
-COPY package-lock.json ./
+# Copy package files and install all dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# ---- Dependencies Stage ----
-# This stage installs ALL dependencies, including dev dependencies if you had them.
-FROM base AS dependencies
-# Install dependencies
-RUN npm install
+# Copy the rest of the application source code
+COPY . .
+
 
 # ---- Production Stage ----
-# This is the final, lean image.
-FROM node:alpine AS production
-# Install ONLY production dependencies.
-RUN npm ci --omit=dev
-# Copy the rest of the application code
-COPY . .
+# This is the final, lean image that will be deployed
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only the necessary files from the 'builder' stage
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/app.js ./app.js
+COPY --from=builder /app/node_modules ./node_modules
 
 # Expose the port the app runs on
 EXPOSE 8080
